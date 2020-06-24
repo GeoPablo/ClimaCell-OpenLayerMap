@@ -1,0 +1,115 @@
+<html>
+  <head>
+    <title></title>
+    <script src="http://openlayers.org/api/OpenLayers.js"></script>
+    <script src="./map.js"></script>
+
+    <style>
+      :root {
+        font-family: "Lato", sans-serif;
+      }
+      .data-card {
+        position: fixed;
+        top: 0;
+        z-index: 9999;
+        background-color: #fff;
+        padding: 0 10px;
+        border: 1px solid rgba(0, 0, 0, 0.125);
+      }
+
+      .data-card p > span:first-child {
+        margin-right: 15px;
+        color: #007bff;
+      }
+
+      .data-card p > span:last-child {
+        float: right;
+      }
+
+      .hide {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <div class="data-card" id="data-card">
+      <p id="wind-speed">
+        <span>Wind speed</span>
+        <span></span>
+      </p>
+
+      <p id="precipitation">
+        <span>Precipitation</span>
+        <span></span>
+      </p>
+
+      <p id="air-pressure">
+        <span>Air pressupre</span>
+        <span></span>
+      </p>
+
+      <p id="humidity">
+        <span>Humidity</span>
+        <span></span>
+      </p>
+
+      <p id="temperature">
+        <span>Temperature</span>
+        <span></span>
+      </p>
+
+      <p id="o3">
+        <span>Ozone(o3)</span>
+        <span></span>
+      </p>
+
+      <p id="so2">
+        <span>Sulfur Dioxide(so2)</span>
+        <span></span>
+      </p>
+
+      <p id="surface_shortwave_radiation">
+        <span>Solar radiation</span>
+        <span></span>
+      </p>
+    </div>
+    <script>
+      const CC_KEY = "<your_api_key>";
+
+      function queryBuilder(request, options) {
+        request += "?";
+        Object.keys(options).forEach((key) => {
+          if (
+            typeof options[key] === "number" ||
+            typeof options[key] === "string"
+          ) {
+            if (request[request.length - 1] !== "?") {
+              request += "&";
+            }
+            request += `${key}=${options[key]}`;
+          } else if (Array.isArray(options[key])) {
+            options[key].forEach((e) => {
+              if (typeof e === "number" || typeof e === "string") {
+                if (request[request.length - 1] !== "?") {
+                  request += "&";
+                }
+                request += `${key}=${e}`;
+              }
+            });
+          }
+        });
+        return request;
+      }
+
+      window.onload = () => {
+        initMap("map", main);
+
+        async function main(coordinates, e) {
+          const { lat, lon } = coordinates;
+        }
+      };
+    </script>
+  </body>
+</html>

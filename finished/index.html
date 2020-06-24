@@ -1,0 +1,207 @@
+<html>
+  <head>
+    <title></title>
+    <script src="http://openlayers.org/api/OpenLayers.js"></script>
+    <script src="./map.js"></script>
+
+    <style>
+      :root {
+        font-family: "Lato", sans-serif;
+      }
+      .data-card {
+        position: fixed;
+        top: 0;
+        z-index: 9999;
+        background-color: #fff;
+        padding: 0 10px;
+        border: 1px solid rgba(0, 0, 0, 0.125);
+      }
+
+      .data-card p > span:first-child {
+        margin-right: 15px;
+        color: #007bff;
+      }
+
+      .data-card p > span:last-child {
+        float: right;
+      }
+
+      .hide {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <div class="data-card" id="data-card">
+      <p id="wind-speed">
+        <span>Wind speed</span>
+        <span></span>
+      </p>
+
+      <p id="precipitation">
+        <span>Precipitation</span>
+        <span></span>
+      </p>
+
+      <p id="air-pressure">
+        <span>Air pressupre</span>
+        <span></span>
+      </p>
+
+      <p id="humidity">
+        <span>Humidity</span>
+        <span></span>
+      </p>
+
+      <p id="temperature">
+        <span>Temperature</span>
+        <span></span>
+      </p>
+
+      <p id="o3">
+        <span>Ozone(o3)</span>
+        <span></span>
+      </p>
+
+      <p id="so2">
+        <span>Sulfur Dioxide(so2)</span>
+        <span></span>
+      </p>
+
+      <p id="surface_shortwave_radiation">
+        <span>Solar radiation</span>
+        <span></span>
+      </p>
+    </div>
+    <script>
+      const CC_KEY = "<your_api_key>";
+
+      function queryBuilder(request, options) {
+        request += "?";
+        Object.keys(options).forEach((key) => {
+          if (
+            typeof options[key] === "number" ||
+            typeof options[key] === "string"
+          ) {
+            if (request[request.length - 1] !== "?") {
+              request += "&";
+            }
+            request += `${key}=${options[key]}`;
+          } else if (Array.isArray(options[key])) {
+            options[key].forEach((e) => {
+              if (typeof e === "number" || typeof e === "string") {
+                if (request[request.length - 1] !== "?") {
+                  request += "&";
+                }
+                request += `${key}=${e}`;
+              }
+            });
+          }
+        });
+        return request;
+      }
+
+      async function getWeatherData(lat, lon) {
+        try {
+          const fields = [
+            "temp",
+            "precipitation",
+            "baro_pressure",
+            "humidity",
+            "wind_speed",
+            "o3",
+            "so2",
+            "surface_shortwave_radiation",
+          ];
+
+          const url = queryBuilder(
+            "https://api.climacell.co/v3/weather/realtime",
+            {
+              lat,
+              lon,
+              unit_system: "si",
+              fields: fields,
+              apikey: CC_KEY,
+            }
+          );
+
+          const climaCellRes = await fetch(url);
+
+          if (climaCellRes.status === 404) {
+            return;
+          }
+          const climaCellData = await climaCellRes.json();
+
+          return climaCellData;
+        } catch (err) {
+          return;
+        }
+      }
+
+      function updateCardData(data) {
+        document.querySelector(
+          "#wind-speed > span:last-child"
+        ).innerHTML = `${data.wind_speed.value} ${data.wind_speed.units}`;
+
+        document.querySelector(
+          "#precipitation > span:last-child"
+        ).innerHTML = `${data.precipitation.value} ${data.precipitation.units}`;
+
+        document.querySelector(
+          "#air-pressure > span:last-child"
+        ).innerHTML = `${data.baro_pressure.value} ${data.baro_pressure.units}`;
+
+        document.querySelector(
+          "#humidity > span:last-child"
+        ).innerHTML = `${data.humidity.value} ${data.humidity.units}`;
+
+        document.querySelector(
+          "#temperature > span:last-child"
+        ).innerHTML = `${data.temp.value} ${data.temp.units}`;
+
+        document.querySelector(
+          "#o3 > span:last-child"
+        ).innerHTML = `${data.o3.value} ${data.o3.units}`;
+
+        document.querySelector(
+          "#so2 > span:last-child"
+        ).innerHTML = `${data.so2.value} ${data.so2.units}`;
+
+        document.querySelector(
+          "#surface_shortwave_radiation > span:last-child"
+        ).innerHTML = `${data.surface_shortwave_radiation.value} ${data.surface_shortwave_radiation.units}`;
+      }
+
+      function toggleCard(action) {
+        if (action === "hide") {
+          document.querySelector("#data-card").classList.add("hide");
+        } else if (action === "show") {
+          document.querySelector("#data-card").classList.remove("hide");
+        }
+      }
+
+      function moveCard(x, y) {
+        document.querySelector("#data-card").style.left = x;
+        document.querySelector("#data-card").style.top = y;
+      }
+
+      window.onload = () => {
+        initMap("map", main);
+
+        async function main(coordinates, e) {
+          const { lat, lon } = coordinates;
+
+          const data = await getWeatherData(lat, lon);
+          toggleCard("hide");
+          if (data) {
+            updateCardData(data);
+            moveCard(e.clientX, e.clientY);
+            toggleCard("show");
+          }
+        }
+      };
+    </script>
+  </body>
+</html>
